@@ -43,6 +43,12 @@ pygame.mixer.music.load('music/maintheme.mp3')
 pygame.mixer.music.set_volume(0.3)  # Set volume (0.0 to 1.0)
 pygame.mixer.music.play(-1)  # -1 means loop indefinitely
 
+# Load sound effects
+lock_sound = pygame.mixer.Sound('music/lock.mp3')
+score_sound = pygame.mixer.Sound('music/score.mp3')
+lock_sound.set_volume(0.5)
+score_sound.set_volume(0.6)
+
 title_tetris = main_font.render('TETRIS', True, pygame.Color('darkorange'))
 title_score = font.render('score:', True, pygame.Color('green'))
 title_record = font.render('record:', True, pygame.Color('purple'))
@@ -54,6 +60,7 @@ color, next_color = get_color(), get_color()
 
 score, lines = 0, 0
 scores = {0: 0, 1: 100, 2: 300, 3: 700, 4: 1500}
+speed_boost_time =   0  # Track when speed boost was activated
 
 
 def check_borders():
@@ -99,8 +106,13 @@ while True:
                 dx = 1
             elif event.key == pygame.K_DOWN:
                 anim_limit = 100
+                speed_boost_time = pygame.time.get_ticks()  # Record when boost started
             elif event.key == pygame.K_UP:
                 rotate = True
+    # check if speed boost duration has expired (0.5 seconds = 500ms)
+    if speed_boost_time > 0 and pygame.time.get_ticks() - speed_boost_time > 200:
+        anim_limit = 2000
+        speed_boost_time = 0  # Reset the timer
     # move x
     figure_old = deepcopy(figure)
     for i in range(4):
@@ -116,6 +128,8 @@ while True:
         for i in range(4):
             figure[i].y += 1
             if not check_borders():
+                speed_boost_time = 0  # Reset speed boost when piece lands
+                lock_sound.play()  # Play lock sound when piece lands
                 for i in range(4):
                     field[figure_old[i].y][figure_old[i].x] = color
                 figure, color = next_figure, next_color
@@ -149,6 +163,8 @@ while True:
             lines += 1
     # compute score
     score += scores[lines]
+    if lines > 0:
+        score_sound.play()  # Play score sound when lines are cleared
     # draw grid
     [pygame.draw.rect(game_sc, (40, 40, 40), i_rect, 1) for i_rect in grid]
     # draw figure
