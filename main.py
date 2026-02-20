@@ -3,10 +3,13 @@ from copy import deepcopy
 from random import choice, randrange
 
 W, H = 10, 20
-TILE = 45
+TILE = 40
 GAME_RES = W * TILE, H * TILE
-RES = 750, 940
+RES = 780, 900
 FPS = 60
+GAME_OFFSET_X = 20  # Game area offset from left edge
+GAME_OFFSET_Y = 20  # Game area offset from top edge
+UI_PANEL_X = GAME_OFFSET_X + GAME_RES[0] + 30  # Right panel starting position
 
 pygame.init()
 sc = pygame.display.set_mode(RES)
@@ -34,6 +37,11 @@ game_bg = pygame.image.load('img/bg2.jpg').convert()
 
 main_font = pygame.font.Font('font/font.ttf', 65)
 font = pygame.font.Font('font/font.ttf', 45)
+
+# Load and play background music
+pygame.mixer.music.load('music/maintheme.mp3')
+pygame.mixer.music.set_volume(0.3)  # Set volume (0.0 to 1.0)
+pygame.mixer.music.play(-1)  # -1 means loop indefinitely
 
 title_tetris = main_font.render('TETRIS', True, pygame.Color('darkorange'))
 title_score = font.render('score:', True, pygame.Color('green'))
@@ -75,7 +83,7 @@ while True:
     record = get_record()
     dx, rotate = 0, False
     sc.blit(bg, (0, 0))
-    sc.blit(game_sc, (20, 20))
+    sc.blit(game_sc, (GAME_OFFSET_X, GAME_OFFSET_Y))
     game_sc.blit(game_bg, (0, 0))
     # delay for full lines
     for i in range(lines):
@@ -156,15 +164,15 @@ while True:
                 pygame.draw.rect(game_sc, col, figure_rect)
     # draw next figure
     for i in range(4):
-        figure_rect.x = next_figure[i].x * TILE + 380
-        figure_rect.y = next_figure[i].y * TILE + 185
+        figure_rect.x = next_figure[i].x * TILE + UI_PANEL_X - 2 * TILE
+        figure_rect.y = next_figure[i].y * TILE + 165
         pygame.draw.rect(sc, next_color, figure_rect)
     # draw titles
-    sc.blit(title_tetris, (485, -10))
-    sc.blit(title_score, (535, 780))
-    sc.blit(font.render(str(score), True, pygame.Color('white')), (550, 840))
-    sc.blit(title_record, (525, 650))
-    sc.blit(font.render(record, True, pygame.Color('gold')), (550, 710))
+    sc.blit(title_tetris, (UI_PANEL_X + 10, GAME_OFFSET_Y - 10))
+    sc.blit(title_score, (UI_PANEL_X + 10, RES[1] - 150))
+    sc.blit(font.render(str(score), True, pygame.Color('white')), (UI_PANEL_X + 10, RES[1] - 90))
+    sc.blit(title_record, (UI_PANEL_X + 10, RES[1] - 280))
+    sc.blit(font.render(record, True, pygame.Color('gold')), (UI_PANEL_X + 10, RES[1] - 210))
     # game over
     for i in range(W):
         if field[0][i]:
@@ -174,7 +182,7 @@ while True:
             score = 0
             for i_rect in grid:
                 pygame.draw.rect(game_sc, get_color(), i_rect)
-                sc.blit(game_sc, (20, 20))
+                sc.blit(game_sc, (GAME_OFFSET_X, GAME_OFFSET_Y))
                 pygame.display.flip()
                 clock.tick(200)
 
